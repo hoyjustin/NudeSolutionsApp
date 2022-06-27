@@ -1,0 +1,3 @@
+[submodule "NudeApp/client-app"]
+	path = NudeApp/client-app
+	url = https://github.com/hoyjustin/NudeSolutionsApp-client

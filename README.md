@@ -15,7 +15,7 @@ The submodule repo can be found here: https://github.com/hoyjustin/NudeSolutions
 ### Installation & Startup
 =========================
 
-The solution can be started through Visual Studio...
+The entire solution can be started through Visual Studio...
 
 Alternatively, you can also:
 1. Run 'npm start' at the 'client-app' directory to run the client-side app in development mode

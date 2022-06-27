@@ -11,6 +11,8 @@ The client-side application in the 'client-app' directory is intended for displa
 This was developed through React and Typescript.
 The submodule repo can be found here: https://github.com/hoyjustin/NudeSolutionsApp-client
 
+Both can be initialized from this repo through `git clone https://github.com/hoyjustin/NudeSolutionsApp --recursive`
+
 
 ### Installation & Startup
 =========================

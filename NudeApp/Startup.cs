@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using NudeApp.Data;
-using NudeApp.Models;
+using NudeApp.DAL;
+using NudeApp.Services;
 
 namespace NudeApp
 {
@@ -22,7 +22,6 @@ namespace NudeApp
 
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllersWithViews();
 
             // In production, the React files will be served from this directory
@@ -31,10 +30,12 @@ namespace NudeApp
                 configuration.RootPath = "ClientApp/build";
             });
 
-            services.AddScoped<UserRepository>();
-
             services.AddDbContext<NudeAppContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("NudeAppContext")));
+
+            services.AddScoped<HighValueItemDataStore>();
+            services.AddScoped<CategoryDataStore>();
+            services.AddScoped<CategorizeItemsService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

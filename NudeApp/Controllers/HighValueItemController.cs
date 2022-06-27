@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NudeApp.Models;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using NudeApp.Data;
 using System;
+using NudeApp.DAL;
+using NudeApp.Services;
+using NudeApp.DTO;
 
 namespace NudeApp.Controllers
 {
@@ -13,102 +13,61 @@ namespace NudeApp.Controllers
     [ApiController]
     public class HighValueItemController : Controller
     {
-        private readonly NudeAppContext _context;
-        private readonly UserRepository _userRepository;
+        private readonly HighValueItemDataStore _highValueItemDataStore;
+        private readonly CategoryDataStore _categoryDatastore;
+        private readonly CategorizeItemsService _categorizeService;
 
-        public HighValueItemController(NudeAppContext context, UserRepository userRepository)
+        public HighValueItemController(HighValueItemDataStore highValueItemDataStore, CategoryDataStore categoryDatastore, CategorizeItemsService categorizeService)
         {
-            _context = context;
-            _userRepository = userRepository;
+            _highValueItemDataStore = highValueItemDataStore;
+            _categoryDatastore = categoryDatastore;
+            _categorizeService = categorizeService;
         }
 
-        // GET: api/HighValueItem
+        // GET: api/HighValueItem/GetHighValueItemsPerCategory
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<HighValueItem>>> GetHighValueItems()
+        public async Task<IEnumerable<CategoryResponseDTO>> GetHighValueItemsPerCategory()
         {
-            IEnumerable<HighValueItem> highValueItems = _userRepository.GetAll();
-
-            Task<ActionResult<IEnumerable<HighValueItem>>> task = Task.Run<ActionResult<IEnumerable<HighValueItem>>>(()=> Ok(_userRepository.GetAll()));
-
-            return Ok(_userRepository.GetAll());
-            //return await _context.HighValueItem.ToListAsync();
+            var items = await _highValueItemDataStore.GetAllHighValueItems();
+            return await _categorizeService.CategorizeHighValueItemsAsync(items);
         }
 
-        // GET: api/HighValueItem/id
-        [HttpGet("{id}")]
-        public async Task<ActionResult<HighValueItem>> GetHighValueItem(int id)
-        {
-            var note = await _context.HighValueItem.FindAsync(id);
-
-            if (note == null)
-            {
-                return NotFound();
-            }
-
-            return note;
-        }
-
-        // PUT: api/HighValueItem/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutHighValueItem(Guid id, HighValueItem highValueItem)
-        {
-            if (id != highValueItem.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(highValueItem).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!HighValueItemExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/HighValueItem
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST: api/HighValueItem/CreateHighValueItem
         [HttpPost]
-        public async Task<ActionResult<HighValueItem>> CreateHighValueItem(HighValueItem highValueItem)
+        public async Task<IActionResult> CreateHighValueItem(HighValueItemRequestDTO highValueItem)
         {
-            _context.HighValueItem.Add(highValueItem);
-            await _context.SaveChangesAsync();
+            var category = await _categoryDatastore.GetCategoryByName(highValueItem.Category);
 
-            return CreatedAtAction("GetHighValueItem", new { id = highValueItem.Id }, highValueItem);
-        }
+            var created = await _highValueItemDataStore.AddHighValueItem(new HighValueItem {
+                Id = Guid.NewGuid(),
+                Name = highValueItem.Name,
+                Value = highValueItem.Value,
+                CategoryId = category.CategoryId
+            });
 
-        // DELETE: api/HighValueItem/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteHighValueItem(int id)
-        {
-            var note = await _context.HighValueItem.FindAsync(id);
-            if (note == null)
+            var items = await _highValueItemDataStore.GetAllHighValueItems();
+            var response = await _categorizeService.CategorizeHighValueItemsAsync(items);
+
+            if (!created)
             {
                 return NotFound();
             }
-
-            _context.HighValueItem.Remove(note);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok(response);
         }
 
-        private bool HighValueItemExists(Guid id)
+        // DELETE: api/HighValueItem/DeleteHighValueItem/id
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteHighValueItem(Guid id)
         {
-            return _context.HighValueItem.Any(e => e.Id == id);
+            var deleted = await _highValueItemDataStore.DeleteHighValueItem(id);
+            var items = await _highValueItemDataStore.GetAllHighValueItems();
+            var response = await _categorizeService.CategorizeHighValueItemsAsync(items);
+
+            if (!deleted)
+            {
+                return NotFound();
+            }
+            return Ok(response);
         }
     }
 }

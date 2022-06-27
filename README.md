@@ -18,5 +18,5 @@ The submodule repo can be found here: https://github.com/hoyjustin/NudeSolutions
 The solution can be started through Visual Studio...
 
 Alternatively, you can also:
-1. Run 'npm start' at the 'client-app' directory to run the app in development mode
+1. Run 'npm start' at the 'client-app' directory to run the client-side app in development mode
 2. Point a browser to 'localhost:3000' and you're up and running!
